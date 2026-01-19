@@ -1,5 +1,6 @@
 ﻿import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import emailjs from '@emailjs/browser';
 
 // --- Utility Components ---
 const Section = ({ id, title, children }) => (
@@ -168,6 +169,9 @@ const education = [
 // --- Main App ---
 export default function PortfolioApp() {
   const [query, setQuery] = useState("");
+  const [formStatus, setFormStatus] = useState({ type: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const filteredProjects = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return projects;
@@ -432,16 +436,50 @@ export default function PortfolioApp() {
               <p className="text-sm text-gray-400 mt-3 leading-relaxed">
                 I am open to backend-focused roles, contract work, and collaborations. Send me a note and I will get back to you soon.
               </p>
+              
+              {formStatus.message && (
+                <div className={`mt-4 p-4 rounded-xl border ${formStatus.type === 'success' ? 'bg-green-500/10 border-green-500/50 text-green-300' : 'bg-red-500/10 border-red-500/50 text-red-300'}`}>
+                  {formStatus.message}
+                </div>
+              )}
+              
               <form
                 className="mt-6 grid gap-4"
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
-                  const data = new FormData(e.currentTarget);
-                  const subject = encodeURIComponent("Portfolio contact - "+ data.get("name"));
-                  const body = encodeURIComponent(
-                    `From: ${data.get("name")} <${data.get("email")}>\n\n\n${data.get("message")}`
-                  );
-                  window.location.href = `mailto:${profile.email}?subject=${subject}&body=${body}`;
+                  const form = e.currentTarget;
+                  setIsSubmitting(true);
+                  setFormStatus({ type: '', message: '' });
+                  
+                  try {
+                    // Replace these with your EmailJS credentials
+                    const SERVICE_ID = 'service_up2te8o';
+                    const TEMPLATE_ID = 'template_7ylse64';
+                    const PUBLIC_KEY = 'FP6AZJgdHo2Xj4pS5';
+                    
+                    const result = await emailjs.sendForm(
+                      SERVICE_ID,
+                      TEMPLATE_ID,
+                      form,
+                      PUBLIC_KEY
+                    );
+                    
+                    if (result.text === 'OK') {
+                      setFormStatus({ 
+                        type: 'success', 
+                        message: '✓ Message sent successfully! I\'ll get back to you soon.' 
+                      });
+                      form.reset();
+                    }
+                  } catch (error) {
+                    console.error('EmailJS Error:', error);
+                    setFormStatus({ 
+                      type: 'error', 
+                      message: '✗ Failed to send message. ' + (error.text || error.message || 'Please email me directly at ' + profile.email)
+                    });
+                  } finally {
+                    setIsSubmitting(false);
+                  }
                 }}
               >
                 <div className="grid md:grid-cols-2 gap-4">
@@ -449,9 +487,13 @@ export default function PortfolioApp() {
                   <input name="email" required type="email" placeholder="Your email" className="rounded-xl bg-gray-800/50 border border-gray-700/50 px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50" />
                 </div>
                 <textarea name="message" required rows={5} placeholder="Your message" className="rounded-xl bg-gray-800/50 border border-gray-700/50 px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50" />
-                <button className="group justify-self-start inline-flex items-center rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 hover:scale-105 transition-all" type="submit">
-                  Send Message
-                  <span className="ml-2 group-hover:translate-x-1 transition-transform"></span>
+                <button 
+                  className="group justify-self-start inline-flex items-center rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100" 
+                  type="submit"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Sending...' : 'Send Message'}
+                  <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
                 </button>
               </form>
             </div>
