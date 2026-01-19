@@ -484,13 +484,8 @@ export default function PortfolioApp() {
       {/* Footer */}
       <footer className="py-12 border-t border-gray-800/50">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="text-sm text-gray-500">
-              © {new Date().getFullYear()} {profile.name}. All rights reserved.
-            </div>
-            <div className="text-sm text-gray-500">
-              Built with <span className="text-purple-400">React</span>, <span className="text-blue-400">Tailwind CSS</span> & <span className="text-pink-400">Framer Motion</span>
-            </div>
+          <div className="text-center text-sm text-gray-500">
+            © {new Date().getFullYear()} {profile.name}. All rights reserved.
           </div>
         </div>
       </footer>
